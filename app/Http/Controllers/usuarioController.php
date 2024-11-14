@@ -47,7 +47,7 @@ class usuarioController extends Controller
             }
             // Encriptar la contraseña con SHA-256
             $request->merge([
-                'clave' => hash('sha256', $request->clave)
+                'clave' => $this->hashPassword( $request->clave)
             ]);
             $usuario = Usuario::create($request->only([
                 'nombre',
@@ -77,11 +77,9 @@ class usuarioController extends Controller
                 return ResponseMessages::error($validator->errors(), 400);
             }
             // Encriptar la contraseña con SHA-256
-            if ($request->has('clave')) {
-                $request->merge([
-                    'clave' => hash('sha256', $request->clave)
-                ]);
-            }
+            $request->merge([
+                'clave' => $this->hashPassword( $request->clave)
+            ]);
             // Actualizar el usuario
             $usuario = Usuario::findOrFail($request->id);
             $usuario->update($request->only([
@@ -129,12 +127,17 @@ class usuarioController extends Controller
             'rol' => 'required|in:admin,usuario,moderador',
             'estado' => 'required|in:activo,inactivo'
         ];
-        // Si se proporciona un ID, asegurarse de que el ID exista en la base de datos
+        // Si se proporciona un ID, validar que exista en la base de datos
         if ($id != null) {
-            $rules['id'] = 'required|exists:usuario,id';  // Validar que el ID exista
+            $rules['id'] = 'required|exists:usuario,id';  
         }
         // Crear el validador
         $validator = Validator::make($request->all(), $rules);
         return $validator;
     }
+      // Método para hashear contraseña
+      private function hashPassword($password)
+      {
+          return hash('sha256', $password);
+      }
 }
